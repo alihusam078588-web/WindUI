@@ -1,41 +1,3 @@
-local function GenerateAutoFlag(config, Window)
-	if typeof(config.Flag) == "string" and config.Flag ~= "" then
-		return
-	end
-
-	local title = tostring(config.Title or "Toggle")
-	local flag = title
-		:gsub("%s+", "_")
-		:gsub("[^%w_]", "_")
-		:gsub("_+", "_")
-		:gsub("^_+", "")
-		:gsub("_+$", "")
-
-	if flag == "" then
-		flag = "Toggle"
-	end
-
-	local baseFlag = flag
-	local index = 2
-
-	local function Exists(name)
-		if Window.CurrentConfig and Window.CurrentConfig.Elements[name] then
-			return true
-		end
-		if Window.PendingFlags and Window.PendingFlags[name] then
-			return true
-		end
-		return false
-	end
-
-	while Exists(flag) do
-		flag = baseFlag .. "_" .. index
-		index += 1
-	end
-
-	config.Flag = flag
-end
-
 return {
 	Elements = {
 		Paragraph = require("./Paragraph"),
@@ -58,7 +20,175 @@ return {
 		Viewport = require("./Viewport"),
 		--Video       = require("./Video"),
 	},
+
 	Load = function(tbl, Container, Elements, Window, WindUI, OnElementCreateFunction, ElementsModule, UIScale, Tab)
+		local AutoFlagElements = {
+			Toggle = true,
+			Slider = true,
+			Dropdown = true,
+			Input = true,
+			Keybind = true,
+			Colorpicker = true,
+		}
+
+		local function MakeFlag(title)
+			if type(title) ~= "string" then
+				return nil
+			end
+
+			local flag = title:gsub("[^%w]+", "_"):gsub("^_+", ""):gsub("_+$", "")
+			if flag == "" then
+				return nil
+			end
+
+			Window._WindUIAutoFlags = Window._WindUIAutoFlags or {}
+			local base = flag
+			local index = 2
+			while Window._WindUIAutoFlags[flag] do
+				flag = base .. "_" .. index
+				index += 1
+			end
+			Window._WindUIAutoFlags[flag] = true
+			return flag
+		end
+
+		local function GetKeybindGui()
+			if Window._KeybindGui and Window._KeybindGui.Parent then
+				return Window._KeybindGui
+			end
+
+			local Players = game:GetService("Players")
+			local Player = Players.LocalPlayer
+			local PlayerGui = Player:WaitForChild("PlayerGui")
+
+			local ScreenGui = Instance.new("ScreenGui")
+			ScreenGui.Name = "WindUIKeybindButtons"
+			ScreenGui.ResetOnSpawn = false
+			ScreenGui.DisplayOrder = 999999
+			ScreenGui.Parent = PlayerGui
+
+			Window._KeybindGui = ScreenGui
+			Window._KeybindButtonCount = Window._KeybindButtonCount or 0
+			return ScreenGui
+		end
+
+		local function CreateKeybindButton(content)
+			Window._KeybindButtons = Window._KeybindButtons or {}
+			if Window._KeybindButtons[content] and Window._KeybindButtons[content].Parent then
+				return Window._KeybindButtons[content]
+			end
+
+			local UserInputService = game:GetService("UserInputService")
+			local Camera = workspace.CurrentCamera
+			local ScreenGui = GetKeybindGui()
+
+			Window._KeybindButtonCount += 1
+
+			local Button = Instance.new("TextButton")
+			Button.Name = (content.Title or "Keybind") .. "Button"
+			Button.Size = UDim2.fromOffset(80, 40)
+			Button.Position = UDim2.new(1, -20, 0, 20 + ((Window._KeybindButtonCount - 1) * 50))
+			Button.AnchorPoint = Vector2.new(1, 0)
+			Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+			Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Button.Text = content.Title or "Button"
+			Button.TextScaled = true
+			Button.Font = Enum.Font.GothamBold
+			Button.AutoButtonColor = true
+			Button.Parent = ScreenGui
+
+			local Corner = Instance.new("UICorner")
+			Corner.CornerRadius = UDim.new(0, 12)
+			Corner.Parent = Button
+
+			local function UpdateSize()
+				Camera = workspace.CurrentCamera or Camera
+				if not Camera then
+					return
+				end
+				local viewport = Camera.ViewportSize
+				local scale = math.clamp(math.min(viewport.X, viewport.Y) / 700, 0.75, 1.25)
+				Button.Size = UDim2.fromOffset(80 * scale, 40 * scale)
+			end
+
+			if Camera then
+				Camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateSize)
+			end
+			UpdateSize()
+
+			local dragging = false
+			local moved = false
+			local dragStart
+			local startPosition
+			local dragInput
+
+			local function UpdateDrag(input)
+				if not dragStart or not startPosition then
+					return
+				end
+
+				local delta = input.Position - dragStart
+				if not moved and delta.Magnitude > 6 then
+					moved = true
+					dragging = true
+				end
+
+				if dragging then
+					Button.Position = UDim2.new(
+						startPosition.X.Scale,
+						startPosition.X.Offset + delta.X,
+						startPosition.Y.Scale,
+						startPosition.Y.Offset + delta.Y
+					)
+				end
+			end
+
+			Button.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch then
+					dragStart = input.Position
+					startPosition = Button.Position
+					moved = false
+					dragging = false
+				end
+			end)
+
+			Button.InputChanged:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement
+					or input.UserInputType == Enum.UserInputType.Touch then
+					dragInput = input
+				end
+			end)
+
+			UserInputService.InputChanged:Connect(function(input)
+				if input == dragInput then
+					UpdateDrag(input)
+				end
+			end)
+
+			UserInputService.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch then
+					if not moved then
+						content:Set(true, nil, true)
+					end
+					dragging = false
+					if input == dragInput then
+						dragInput = nil
+					end
+				end
+			end)
+
+			Window._KeybindButtons[content] = Button
+			return Button
+		end
+
+		local function DestroyKeybindButton(content)
+			if Window._KeybindButtons and Window._KeybindButtons[content] then
+				Window._KeybindButtons[content]:Destroy()
+				Window._KeybindButtons[content] = nil
+			end
+		end
 		for name, module in next, Elements do
 			tbl[name] = function(self, config)
 				config = config or {}
@@ -73,8 +203,11 @@ return {
 				config.UIScale = UIScale
 				config.ElementsModule = ElementsModule
 
-				if name == "Toggle" then
-					GenerateAutoFlag(config, Window)
+				if AutoFlagElements[name] and config.Flag == nil then
+					config.Flag = MakeFlag(config.Title)
+				elseif type(config.Flag) == "string" then
+					Window._WindUIAutoFlags = Window._WindUIAutoFlags or {}
+					Window._WindUIAutoFlags[config.Flag] = true
 				end
 
 				local _elementInstance, content = module:New(config)
@@ -151,6 +284,32 @@ return {
 				tbl.Elements[config.Index] = content
 				if Tab then
 					Tab.Elements[config.Index] = content
+				end
+
+				if name == "Toggle" and not config._KeybindInternal and not Window._CreatingKeybindToggle then
+					Window._KeybindTab = Window._KeybindTab or Window:Tab({
+						Title = "Keybinds",
+						Icon = "lucide:keyboard",
+					})
+
+					Window._CreatingKeybindToggle = true
+					local keybindToggle = Window._KeybindTab:Toggle({
+						Title = (content.Title or "Toggle") .. " Button",
+						Desc = "Show a button for " .. (content.Title or "Toggle"),
+						Value = false,
+						Flag = (config.Flag and (config.Flag .. "_Button")) or nil,
+						_KeybindInternal = true,
+						Callback = function(value)
+							if value then
+								CreateKeybindButton(content)
+							else
+								DestroyKeybindButton(content)
+							end
+						end,
+					})
+					Window._CreatingKeybindToggle = false
+
+					content._KeybindToggle = keybindToggle
 				end
 
 				if Window.NewElements then
