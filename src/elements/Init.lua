@@ -35,6 +35,16 @@ return {
 				config.UIScale = UIScale
 				config.ElementsModule = ElementsModule
 
+				if not config.Flag and config.Title then
+					local flag = tostring(config.Title)
+						:gsub("%s+", "_")
+						:gsub("[^%w_]", "")
+
+					if flag ~= "" then
+						config.Flag = flag
+					end
+				end
+
 				local _elementInstance, content = module:New(config)
 
 				if config.Flag and typeof(config.Flag) == "string" then
