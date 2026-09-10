@@ -356,7 +356,15 @@ return {
 
 						Callback = function(value)
 							if value then
-								CreateKeybindButton(content)
+								task.defer(function()
+									if Window._KeybindButtons
+										and Window._KeybindButtons[content]
+										and Window._KeybindButtons[content].Parent then
+										return
+									end
+
+									CreateKeybindButton(content)
+								end)
 							else
 								DestroyKeybindButton(content)
 							end
