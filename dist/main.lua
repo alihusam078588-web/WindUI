@@ -35841,74 +35841,77 @@ UpdateSize()
 
 local ax=false
 local ay=false
-local az
+local az=false
 local aA
 local aB
+local b
 
-local function UpdateDrag(b)
-if not az or not aA then
+local function UpdateDrag(d)
+if not aA or not aB then
 return
 end
 
-local d=b.Position-az
+local f=d.Position-aA
 
-if not ay and d.Magnitude>6 then
+if not ay and f.Magnitude>6 then
 ay=true
 ax=true
 end
 
 if ax then
 av.Position=UDim2.new(
-aA.X.Scale,
-aA.X.Offset+d.X,
-aA.Y.Scale,
-aA.Y.Offset+d.Y
+aB.X.Scale,
+aB.X.Offset+f.X,
+aB.Y.Scale,
+aB.Y.Offset+f.Y
 )
 end
 end
 
-av.InputBegan:Connect(function(b)
-if b.UserInputType==Enum.UserInputType.MouseButton1
-or b.UserInputType==Enum.UserInputType.Touch then
+av.InputBegan:Connect(function(d)
+if d.UserInputType==Enum.UserInputType.MouseButton1
+or d.UserInputType==Enum.UserInputType.Touch then
 
-az=b.Position
-aA=av.Position
+aA=d.Position
+aB=av.Position
 ay=false
 ax=false
+az=true
 end
 end)
 
-av.InputChanged:Connect(function(b)
-if b.UserInputType==Enum.UserInputType.MouseMovement
-or b.UserInputType==Enum.UserInputType.Touch then
+av.InputChanged:Connect(function(d)
+if d.UserInputType==Enum.UserInputType.MouseMovement
+or d.UserInputType==Enum.UserInputType.Touch then
 
-aB=b
+b=d
 end
 end)
 
-as.InputChanged:Connect(function(b)
-if b==aB then
-UpdateDrag(b)
+as.InputChanged:Connect(function(d)
+if d==b then
+UpdateDrag(d)
 end
 end)
 
-as.InputEnded:Connect(function(b)
-if b.UserInputType==Enum.UserInputType.MouseButton1
-or b.UserInputType==Enum.UserInputType.Touch then
+as.InputEnded:Connect(function(d)
+if d.UserInputType==Enum.UserInputType.MouseButton1
+or d.UserInputType==Enum.UserInputType.Touch then
 
-if not ay then
-local d=ar.Value==true
-ar:Set(not d,nil,true)
+if not ay and az then
+local f=ar.Value==true
+ar:Set(not f,nil,true)
 end
 
+az=false
 ax=false
 
-if b==aB then
-aB=nil
+if d==b then
+b=nil
 end
 
-az=nil
 aA=nil
+aB=nil
 end
 end)
 
