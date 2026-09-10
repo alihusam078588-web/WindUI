@@ -35743,13 +35743,17 @@ return nil
 end
 
 ak._WindUIAutoFlags=ak._WindUIAutoFlags or{}
+
 local at=as
 local au=2
+
 while ak._WindUIAutoFlags[as]do
 as=at.."_"..au
 au+=1
 end
+
 ak._WindUIAutoFlags[as]=true
+
 return as
 end
 
@@ -35770,11 +35774,13 @@ au.Parent=at
 
 ak._KeybindGui=au
 ak._KeybindButtonCount=ak._KeybindButtonCount or 0
+
 return au
 end
 
 local function CreateKeybindButton(ar)
 ak._KeybindButtons=ak._KeybindButtons or{}
+
 if ak._KeybindButtons[ar]and ak._KeybindButtons[ar].Parent then
 return ak._KeybindButtons[ar]
 end
@@ -35788,7 +35794,12 @@ ak._KeybindButtonCount+=1
 local av=Instance.new"TextButton"
 av.Name=(ar.Title or"Keybind").."Button"
 av.Size=UDim2.fromOffset(80,40)
-av.Position=UDim2.new(1,-20,0,20+((ak._KeybindButtonCount-1)*50))
+av.Position=UDim2.new(
+1,-20
+,
+0,
+20+((ak._KeybindButtonCount-1)*50)
+)
 av.AnchorPoint=Vector2.new(1,0)
 av.BackgroundColor3=Color3.fromRGB(35,35,35)
 av.TextColor3=Color3.fromRGB(255,255,255)
@@ -35804,17 +35815,28 @@ aw.Parent=av
 
 local function UpdateSize()
 at=workspace.CurrentCamera or at
+
 if not at then
 return
 end
+
 local ax=at.ViewportSize
-local ay=math.clamp(math.min(ax.X,ax.Y)/700,0.75,1.25)
-av.Size=UDim2.fromOffset(80*ay,40*ay)
+local ay=math.clamp(
+math.min(ax.X,ax.Y)/700,
+0.75,
+1.25
+)
+
+av.Size=UDim2.fromOffset(
+80*ay,
+40*ay
+)
 end
 
 if at then
 at:GetPropertyChangedSignal"ViewportSize":Connect(UpdateSize)
 end
+
 UpdateSize()
 
 local ax=false
@@ -35829,6 +35851,7 @@ return
 end
 
 local d=b.Position-az
+
 if not ay and d.Magnitude>6 then
 ay=true
 ax=true
@@ -35847,6 +35870,7 @@ end
 av.InputBegan:Connect(function(b)
 if b.UserInputType==Enum.UserInputType.MouseButton1
 or b.UserInputType==Enum.UserInputType.Touch then
+
 az=b.Position
 aA=av.Position
 ay=false
@@ -35857,6 +35881,7 @@ end)
 av.InputChanged:Connect(function(b)
 if b.UserInputType==Enum.UserInputType.MouseMovement
 or b.UserInputType==Enum.UserInputType.Touch then
+
 aB=b
 end
 end)
@@ -35870,17 +35895,25 @@ end)
 as.InputEnded:Connect(function(b)
 if b.UserInputType==Enum.UserInputType.MouseButton1
 or b.UserInputType==Enum.UserInputType.Touch then
+
 if not ay then
-ar:Set(true,nil,true)
+local d=ar.Value==true
+ar:Set(not d,nil,true)
 end
+
 ax=false
+
 if b==aB then
 aB=nil
 end
+
+az=nil
+aA=nil
 end
 end)
 
 ak._KeybindButtons[ar]=av
+
 return av
 end
 
@@ -35890,9 +35923,11 @@ ak._KeybindButtons[ar]:Destroy()
 ak._KeybindButtons[ar]=nil
 end
 end
+
 for ar,as in next,ai do
 aa[ar]=function(at,au)
 au=au or{}
+
 au.Tab=ap or aa
 au.ParentType=aa.__type
 au.ParentTable=aa
@@ -35919,8 +35954,8 @@ ak.CurrentConfig:Register(au.Flag,aw)
 
 if ak.PendingConfigData and ak.PendingConfigData[au.Flag]then
 local ax=ak.PendingConfigData[au.Flag]
-
 local ay=ak.ConfigManager
+
 if ay.Parser[ax.__type]then
 task.defer(function()
 local az,aA=pcall(function()
@@ -35947,8 +35982,12 @@ end
 end
 
 local ax
+
 for ay,az in next,aw do
-if typeof(az)=="table"and ay~="ElementFrame"and ay:match"Frame$"then
+if typeof(az)=="table"
+and ay~="ElementFrame"
+and ay:match"Frame$"then
+
 ax=az
 break
 end
@@ -35956,50 +35995,66 @@ end
 
 if ax then
 aw.ElementFrame=ax.UIElements.Main
+
 function aw.SetTitle(ay,az)
 return ax.SetTitle and ax:SetTitle(az)
 end
+
 function aw.SetDesc(ay,az)
 return ax.SetDesc and ax:SetDesc(az)
 end
+
 function aw.SetImage(ay,az,aA)
 return ax.SetImage and ax:SetImage(az,aA)
 end
+
 function aw.SetThumbnail(ay,az,aA)
 return ax.SetThumbnail and ax:SetThumbnail(az,aA)
 end
+
 function aw.Highlight(ay)
 ax:Highlight()
 end
+
 function aw.Destroy(ay)
 ax:Destroy()
 
 table.remove(ak.AllElements,au.GlobalIndex)
 table.remove(aa.Elements,au.Index)
+
+if ap then
 table.remove(ap.Elements,au.Index)
+end
+
 aa:UpdateAllElementShapes(aa)
 end
 end
 
-ak.AllElements[au.Index]=aw
+ak.AllElements[au.GlobalIndex]=aw
 aa.Elements[au.Index]=aw
+
 if ap then
 ap.Elements[au.Index]=aw
 end
 
-if ar=="Toggle"and not au._KeybindInternal and not ak._CreatingKeybindToggle then
+if ar=="Toggle"
+and not au._KeybindInternal
+and not ak._CreatingKeybindToggle then
+
 ak._KeybindTab=ak._KeybindTab or ak:Tab{
 Title="Keybinds",
 Icon="lucide:keyboard",
 }
 
 ak._CreatingKeybindToggle=true
+
 local ay=ak._KeybindTab:Toggle{
 Title=(aw.Title or"Toggle").." Button",
 Desc="Show a button for "..(aw.Title or"Toggle"),
 Value=false,
 Flag=(au.Flag and(au.Flag.."_Button"))or nil,
 _KeybindInternal=true,
+
 Callback=function(ay)
 if ay then
 CreateKeybindButton(aw)
@@ -36008,6 +36063,7 @@ DestroyKeybindButton(aw)
 end
 end,
 }
+
 ak._CreatingKeybindToggle=false
 
 aw._KeybindToggle=ay
@@ -36020,12 +36076,15 @@ end
 if am then
 am(aw,aa.Elements)
 end
+
 return aw
 end
 end
+
 function aa.UpdateAllElementShapes(ar,as)
 for at,au in next,as.Elements do
 local av
+
 for aw,ax in pairs(au)do
 if typeof(ax)=="table"and aw:match"Frame$"then
 av=ax
@@ -36038,10 +36097,9 @@ av=au
 end
 
 if av then
-
 av.Index=at
-if av.UpdateShape then
 
+if av.UpdateShape then
 av.UpdateShape(as)
 end
 end
