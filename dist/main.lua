@@ -36057,7 +36057,15 @@ _KeybindInternal=true,
 
 Callback=function(ay)
 if ay then
+task.defer(function()
+if ak._KeybindButtons
+and ak._KeybindButtons[aw]
+and ak._KeybindButtons[aw].Parent then
+return
+end
+
 CreateKeybindButton(aw)
+end)
 else
 DestroyKeybindButton(aw)
 end
