@@ -35699,6 +35699,44 @@ end
 
 return al end function a.ae():typeof(__modImpl())local aa=a.cache.ae if not aa then aa={c=__modImpl()}a.cache.ae=aa end return aa.c end end do local function __modImpl()
 
+local function GenerateAutoFlag(aa,af)
+if typeof(aa.Flag)=="string"and aa.Flag~=""then
+return
+end
+
+local ai=tostring(aa.Title or"Toggle")
+local ak=ai
+:gsub("%s+","_")
+:gsub("[^%w_]","_")
+:gsub("_+","_")
+:gsub("^_+","")
+:gsub("_+$","")
+
+if ak==""then
+ak="Toggle"
+end
+
+local al=ak
+local am=2
+
+local function Exists(an)
+if af.CurrentConfig and af.CurrentConfig.Elements[an]then
+return true
+end
+if af.PendingFlags and af.PendingFlags[an]then
+return true
+end
+return false
+end
+
+while Exists(ak)do
+ak=al.."_"..am
+am+=1
+end
+
+aa.Flag=ak
+end
+
 return{
 Elements={
 Paragraph=a.J(),
@@ -35736,14 +35774,8 @@ at.WindUI=al
 at.UIScale=ao
 at.ElementsModule=an
 
-if not at.Flag and at.Title then
-local au=tostring(at.Title)
-:gsub("%s+","_")
-:gsub("[^%w_]","")
-
-if au~=""then
-at.Flag=au
-end
+if aq=="Toggle"then
+GenerateAutoFlag(at,ak)
 end local
 
 au, av=ar:New(at)
