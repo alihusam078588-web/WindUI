@@ -140,6 +140,7 @@ return {
 
 			local dragging = false
 			local moved = false
+			local pressing = false
 			local dragStart
 			local startPosition
 			local dragInput
@@ -174,6 +175,7 @@ return {
 					startPosition = Button.Position
 					moved = false
 					dragging = false
+					pressing = true
 				end
 			end)
 
@@ -195,11 +197,12 @@ return {
 				if input.UserInputType == Enum.UserInputType.MouseButton1
 					or input.UserInputType == Enum.UserInputType.Touch then
 
-					if not moved then
+					if not moved and pressing then
 						local currentValue = content.Value == true
 						content:Set(not currentValue, nil, true)
 					end
 
+					pressing = false
 					dragging = false
 
 					if input == dragInput then
